@@ -1,32 +1,54 @@
 import {
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  deleteDoc,
   collection,
   query,
-  where,
   orderBy,
+  where,
   limit,
   getDocs,
-  serverTimestamp,
+  getDoc,
 } from "firebase/firestore";
+import { doc, setDoc, updateDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "./firebase";
 import { nanoid } from "./utils";
 
 // ---------------------------------------------------------------------------
-// Generic helpers
+// Generic subcollection helpers (business-scoped)
 // ---------------------------------------------------------------------------
 
-export async function getDocument(collectionName, id) {
-  const snap = await getDoc(doc(db, collectionName, id));
-  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+export function businessCol(businessId, sub) {
+  return collection(db, "businesses", businessId, sub);
 }
 
-export async function createDocument(collectionName, data, id) {
+export function businessDoc(businessId, sub, id) {
+  return doc(db, "businesses", businessId, sub, id);
+}
+
+/**
+ * Get all docs in a subcollection with optional order.
+ */
+export async function listSubcollection(businessId, sub, orderField = "createdAt", direction = "desc", max = null) {
+  let q = query(businessCol(businessId, sub), orderBy(orderField, direction));
+  if (max) q = query(q, limit(max));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+/**
+ * Get docs filtered by a single field with order + optional limit.
+ */
+export async function listWhere(businessId, sub, field, operator, value, orderField = "createdAt", direction = "desc", max = null) {
+  let q = query(businessCol(businessId, sub), where(field, operator, value), orderBy(orderField, direction));
+  if (max) q = query(q, limit(max));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+/**
+ * Create a document in a subcollection.
+ */
+export async function createInSubcollection(businessId, sub, data, id = null) {
   const docId = id || nanoid();
-  await setDoc(doc(db, collectionName, docId), {
+  await setDoc(businessDoc(businessId, sub, docId), {
     ...data,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -34,28 +56,29 @@ export async function createDocument(collectionName, data, id) {
   return docId;
 }
 
-export async function updateDocument(collectionName, id, data) {
-  await updateDoc(doc(db, collectionName, id), {
+/**
+ * Update a document in a subcollection.
+ */
+export async function updateInSubcollection(businessId, sub, id, data) {
+  await updateDoc(businessDoc(businessId, sub, id), {
     ...data,
     updatedAt: serverTimestamp(),
   });
 }
 
-export async function deleteDocument(collectionName, id) {
-  await deleteDoc(doc(db, collectionName, id));
+/**
+ * Delete a document in a subcollection.
+ */
+export async function deleteInSubcollection(businessId, sub, id) {
+  await deleteDoc(businessDoc(businessId, sub, id));
 }
 
-export async function listByQuery(collectionName, clauses = []) {
-  let q = collection(db, collectionName);
-  const constraints = [];
-  for (const [type, ...args] of clauses) {
-    if (type === "where") constraints.push(where(...args));
-    if (type === "orderBy") constraints.push(orderBy(...args));
-    if (type === "limit") constraints.push(limit(...args));
-  }
-  if (constraints.length) q = query(q, ...constraints);
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+/**
+ * Get a single document from a subcollection.
+ */
+export async function getFromSubcollection(businessId, sub, id) {
+  const snap = await getDoc(businessDoc(businessId, sub, id));
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 }
 
 // ---------------------------------------------------------------------------
@@ -79,7 +102,8 @@ export async function updateBusiness(businessId, data) {
 // ---------------------------------------------------------------------------
 
 export async function getUserProfile(uid) {
-  return getDocument("users", uid);
+  const snap = await getDoc(doc(db, "users", uid));
+  return snap.exists() ? { id: uid, ...snap.data() } : null;
 }
 
 export async function createUserProfile(uid, data) {
