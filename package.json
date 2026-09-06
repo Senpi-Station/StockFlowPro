@@ -1,0 +1,32 @@
+{
+  "name": "stockflow-pro",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.9.1",
+    "firebase": "^12.18.0",
+    "lucide-react": "^1.41.0",
+    "next": "^16.3.4",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-hook-form": "^7.87.0",
+    "recharts": "^3.10.1",
+    "sonner": "^2.0.8",
+    "zod": "^4.5.4",
+    "zod-form-data": "^3.0.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "autoprefixer": "^10.5.5",
+    "eslint": "^10.10.0",
+    "eslint-config-next": "^16.3.4",
+    "postcss": "^8.5.28",
+    "tailwindcss": "^4.3.3"
+  }
+}
