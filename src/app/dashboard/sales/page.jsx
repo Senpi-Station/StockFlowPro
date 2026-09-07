@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, Undo2 } from "lucide-react";
 import { useSales } from "@/hooks/useSales";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/layout/page-header";
@@ -56,12 +56,20 @@ export default function SalesPage() {
         title="Sales"
         description="View and manage your sales"
         actions={
-          <Button asChild>
-            <Link href="/dashboard/sales/pos">
-              <Plus className="mr-2 h-4 w-4" />
-              New Sale
-            </Link>
-          </Button>
+          <div className="flex gap-2">
+            <Button asChild variant="outline">
+              <Link href="/dashboard/sales/returns">
+                <Undo2 className="mr-2 h-4 w-4" />
+                Returns
+              </Link>
+            </Button>
+            <Button asChild>
+              <Link href="/dashboard/sales/pos">
+                <Plus className="mr-2 h-4 w-4" />
+                New Sale
+              </Link>
+            </Button>
+          </div>
         }
       />
 
