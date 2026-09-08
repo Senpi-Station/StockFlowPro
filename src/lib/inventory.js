@@ -1,6 +1,4 @@
 import {
-  collection,
-  query,
   doc,
   runTransaction,
   serverTimestamp,
@@ -90,6 +88,19 @@ export async function applyStockChange(businessId, {
       updatedAt: serverTimestamp(),
     });
 
+    const logRef = doc(db, "businesses", businessId, "activityLogs", nanoid());
+    transaction.set(logRef, {
+      userId: userId || "",
+      userName: userName || "",
+      action: quantity > 0 ? "STOCK_IN" : "STOCK_OUT",
+      resource: "products",
+      resourceId: productId,
+      description: `${product.name}: ${quantity > 0 ? "+" : ""}${quantity} units (${
+        reason || (quantity > 0 ? "Stock in" : "Stock out")
+      })`,
+      createdAt: serverTimestamp(),
+    });
+
     return { previousStock, newStock, movementId };
   });
 }
@@ -150,6 +161,17 @@ export async function adjustStock(businessId, {
       referenceId: null,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
+    });
+
+    const logRef = doc(db, "businesses", businessId, "activityLogs", nanoid());
+    transaction.set(logRef, {
+      userId: userId || "",
+      userName: userName || "",
+      action: "ADJUST_STOCK",
+      resource: "products",
+      resourceId: productId,
+      description: `${product.name}: stock adjusted from ${previousStock} to ${newStock}`,
+      createdAt: serverTimestamp(),
     });
 
     return { previousStock, newStock, movementId };

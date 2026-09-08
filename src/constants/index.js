@@ -11,7 +11,8 @@ import {
   Users,
   Wallet,
   BarChart3,
-  UserCog,
+  Lightbulb,
+  History,
   Bell,
   Settings,
 } from "lucide-react";
@@ -32,7 +33,8 @@ export const NAV_ITEMS = [
   { href: "/dashboard/customers", label: "Customers", icon: Users, feature: "customers" },
   { href: "/dashboard/expenses", label: "Expenses", icon: Wallet, feature: "reports" },
   { href: "/dashboard/reports", label: "Reports", icon: BarChart3, feature: "reports" },
-  { href: "/dashboard/team", label: "Team", icon: UserCog, feature: "dashboard" },
+  { href: "/dashboard/insights", label: "Insights", icon: Lightbulb, feature: "reports" },
+  { href: "/dashboard/activity", label: "Activity Logs", icon: History, feature: "reports" },
   { href: "/dashboard/notifications", label: "Notifications", icon: Bell, feature: "dashboard" },
   { href: "/dashboard/settings", label: "Settings", icon: Settings, feature: "dashboard" },
 ];

@@ -1,5 +1,4 @@
 import {
-  collection,
   doc,
   runTransaction,
   serverTimestamp,
@@ -7,6 +6,7 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { nanoid } from "./utils";
+import { notifyEvent } from "./notifications";
 
 export const PAYMENT_METHODS = {
   CASH: "CASH",
@@ -55,7 +55,7 @@ export async function completeSale(businessId, {
 
   const saleRef = doc(db, "businesses", businessId, "sales", saleId);
 
-  return runTransaction(db, async (transaction) => {
+  const result = await runTransaction(db, async (transaction) => {
     const stockChecks = [];
     for (const item of items) {
       if (!item.productId) throw new Error("Item missing product");
@@ -161,6 +161,16 @@ export async function completeSale(businessId, {
 
     return { saleId, invoiceNumber };
   });
+
+  notifyEvent(businessId, {
+    type: "NEW_SALE",
+    title: "New sale completed",
+    message: `${result.invoiceNumber} for ${formatMoney(total)}`,
+    referenceId: result.saleId,
+    userId,
+  });
+
+  return result;
 }
 
 function formatMoney(value) {

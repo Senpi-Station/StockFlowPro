@@ -1,8 +1,9 @@
 import { doc, runTransaction, serverTimestamp } from "firebase/firestore";
 import { db } from "./firebase";
-import { nanoid } from "./utils";
+import { nanoid, formatCurrency } from "./utils";
 import { MOVEMENT_TYPES } from "./inventory";
 import { SALE_STATUS } from "./sales";
+import { notifyEvent } from "./notifications";
 
 export const RETURN_REASONS = {
   DAMAGED: "DAMAGED",
@@ -44,7 +45,7 @@ export async function processReturn(businessId, {
   const returnRef = doc(db, "businesses", businessId, "returns", returnId);
   const saleRef = doc(db, "businesses", businessId, "sales", sale.id);
 
-  return runTransaction(db, async (transaction) => {
+  const result = await runTransaction(db, async (transaction) => {
     const saleSnap = await transaction.get(saleRef);
     if (!saleSnap.exists()) throw new Error("Sale not found");
     const saleData = saleSnap.data();
@@ -130,4 +131,14 @@ export async function processReturn(businessId, {
 
     return { returnId };
   });
+
+  notifyEvent(businessId, {
+    type: "RETURN",
+    title: "Return processed",
+    message: `Refund of ${formatCurrency(Number(refundAmount) || 0)} processed`,
+    referenceId: result.returnId,
+    userId,
+  });
+
+  return result;
 }

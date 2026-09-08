@@ -2,6 +2,7 @@ import { doc, runTransaction, serverTimestamp } from "firebase/firestore";
 import { db } from "./firebase";
 import { nanoid } from "./utils";
 import { MOVEMENT_TYPES } from "./inventory";
+import { notifyEvent } from "./notifications";
 
 export const TRANSFER_STATUS = {
   PENDING: "PENDING",
@@ -42,7 +43,7 @@ export async function createTransfer(businessId, {
   const transferRef = doc(db, "businesses", businessId, "transfers", transferId);
   const productRef = doc(db, "businesses", businessId, "products", productId);
 
-  return runTransaction(db, async (transaction) => {
+  const result = await runTransaction(db, async (transaction) => {
     const productSnap = await transaction.get(productRef);
     if (!productSnap.exists()) throw new Error("Product not found");
     const product = productSnap.data();
@@ -139,4 +140,15 @@ export async function createTransfer(businessId, {
 
     return { transferId };
   });
+
+  notifyEvent(businessId, {
+    type: "TRANSFER",
+    title: "Stock transfer completed",
+    message: `${qty} units moved between locations`,
+    productId,
+    referenceId: result.transferId,
+    userId,
+  });
+
+  return result;
 }

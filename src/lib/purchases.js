@@ -2,6 +2,7 @@ import { doc, runTransaction, serverTimestamp, increment } from "firebase/firest
 import { db } from "./firebase";
 import { nanoid, formatCurrency } from "./utils";
 import { MOVEMENT_TYPES } from "./inventory";
+import { notifyEvent } from "./notifications";
 
 export const PURCHASE_STATUS = {
   DRAFT: "DRAFT",
@@ -38,7 +39,7 @@ export async function createPurchase(businessId, {
   const purchaseId = nanoid();
   const purchaseRef = doc(db, "businesses", businessId, "purchases", purchaseId);
 
-  return runTransaction(db, async (transaction) => {
+  const result = await runTransaction(db, async (transaction) => {
     const resolvedItems = [];
     for (const item of items) {
       if (!item.productId) throw new Error("Item missing product");
@@ -90,6 +91,16 @@ export async function createPurchase(businessId, {
 
     return { purchaseId, subtotal };
   });
+
+  notifyEvent(businessId, {
+    type: "NEW_PURCHASE",
+    title: "New purchase order",
+    message: `Purchase order created for ${formatCurrency(result.subtotal)}`,
+    referenceId: result.purchaseId,
+    userId,
+  });
+
+  return result;
 }
 
 /**
