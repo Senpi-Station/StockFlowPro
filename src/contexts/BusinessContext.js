@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useAuthContext } from "./AuthContext";
-import { getBusiness, getDocument, listByQuery } from "@/lib/firestore";
+import { getBusiness, getDocument, listSubcollection } from "@/lib/firestore";
 
 const BusinessContext = createContext({
   business: null,
@@ -19,6 +19,14 @@ export function BusinessProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   const businessId = profile?.businessId;
+
+  const [prevBusinessId, setPrevBusinessId] = useState(businessId);
+  if (prevBusinessId !== businessId) {
+    setPrevBusinessId(businessId);
+    setBusiness(null);
+    setMembers([]);
+    setLoading(!businessId);
+  }
 
   const refreshBusiness = useCallback(async () => {
     if (!businessId) {
@@ -37,7 +45,7 @@ export function BusinessProvider({ children }) {
   const refreshMembers = useCallback(async () => {
     if (!businessId) return;
     try {
-      const data = await listByQuery(`businesses/${businessId}/members`);
+      const data = await listSubcollection(businessId, "members");
       setMembers(data);
     } catch (error) {
       console.error("Failed to load members:", error);
@@ -46,12 +54,7 @@ export function BusinessProvider({ children }) {
   }, [businessId]);
 
   useEffect(() => {
-    if (!businessId) {
-      setLoading(false);
-      setBusiness(null);
-      setMembers([]);
-      return;
-    }
+    if (!businessId) return;
     (async () => {
       await Promise.all([refreshBusiness(), refreshMembers()]);
       setLoading(false);

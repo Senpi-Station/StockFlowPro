@@ -88,7 +88,6 @@ export default function ReportsPage() {
       default:
         return buildSalesReportRows(sales, { start, end });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, range, sales, expenses, products, suppliers, customers, categories]);
 
   const handleExport = () => {
